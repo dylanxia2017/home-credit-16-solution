@@ -41,7 +41,11 @@ Install the following dependencies :
 - lightgbm
 - scikit-learn
 
+### Prepare input files
+
 Download the datasets after accepting the rules from Kaggle website and put them in the input directory.
+
+### Run the code
 
 navigate to the project from the console, then run the command : python app.py
 
