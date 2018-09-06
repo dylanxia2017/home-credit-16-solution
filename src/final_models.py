@@ -1,4 +1,5 @@
-# imports and load dataframes :
+# This script was redacted by Ramzi Bouyekhf (propower)
+
 import pandas as pd 
 import numpy as np
 import random

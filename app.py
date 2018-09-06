@@ -9,12 +9,12 @@ from src.final_models import prepare_final_models
 from src.stacking import stacking
 
 if __name__ == "__main__":
-#     prepare_train_test()
-#     features_selection()
-#     prepare_model_base_2()
-#     prepare_gp_features()
-#     prepare_gp1_features()
-#     prepare_gp2_features()
-#     prepare_gp3_features()
-#     prepare_final_models()
+    prepare_train_test()
+    features_selection()
+    prepare_model_base_2()
+    prepare_gp_features()
+    prepare_gp1_features()
+    prepare_gp2_features()
+    prepare_gp3_features()
+    prepare_final_models()
     stacking()

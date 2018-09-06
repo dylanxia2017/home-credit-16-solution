@@ -1,3 +1,5 @@
+# This script was taken from the public discussion https://www.kaggle.com/c/home-credit-default-risk/discussion/62983
+
 import numpy as np
 import pandas as pd
 import gc

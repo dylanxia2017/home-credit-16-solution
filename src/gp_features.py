@@ -1,3 +1,5 @@
+#This script was taken from the public kernel https://www.kaggle.com/scirpus/hybrid-jeepy-and-lgb-ii
+
 import gc
 import numpy as np
 import pandas as pd
