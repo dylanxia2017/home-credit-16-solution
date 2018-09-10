@@ -28,6 +28,15 @@ The features collected from public discussions and kernels were generated using 
 To maximise the Cross Validation score, I trained each training dataframe with xgboost and lightgbm. Then, I stacked all of them using the Logistic Regression like in this [kernel](https://www.kaggle.com/eliotbarr/stacking-test-sklearn-xgboost-catboost-lightgbm).
 After the stacking, I removed the models that made my CV score drop down. Then I got my final stacking model that I used to make the final submission.
 
+## src files
+The src directory contains several scripts. Each one produce some results that are saved in the processed directory.
+There are two files model_base_{1,2}.py which contains individual code that was developped by the team members. The saved results are two train sets and test sets. The created features in those scripts are the ones that were most trustful and were used several times when producing different single models.
+The file feature_selection.py uses xgboost algorithm to select relevent features from model_base_1. 
+The files gpX_features.py contains scripts that were mostly taken from public kernels and discussions. The features were used to give diversity to our models and the produced features were not trustful. As a consequence, they were used in once or twice when producing different single models.
+The file final_models.py creates several single models and save the results of each model in processed directory. Each model uses a different random_state to limit overfitting.
+The stacking.py file uses the results generated in final_models file and stack all the models using logistic regression algorithm.
+
+
 ## Getting Started
 
 This code uses a stacking of 11 final models, so it took me several hours to run it completely. But if you still want to run it, here are the instructions :
