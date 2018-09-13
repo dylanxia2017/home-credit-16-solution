@@ -13,6 +13,8 @@ For this, Home Credit provided us a very rich dataset, that contains the followi
 
 ## The project pipeline
 
+The scripts are executed in this order : model_base_1 => feature_selection => model_base_2 => gp_features => gp1_features => gp2_features => gp3_features => final_models => stacking 
+
 The project followed a process that is described in the following steps :
 
 ### Increasing model accuracy with feature engineering 
