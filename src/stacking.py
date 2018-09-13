@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 def stacking():
+    # load out-of-folds predictions that were generated using final models script. Those will be used for stacking.
     tr = pd.read_csv("input/application_train.csv").set_index("SK_ID_CURR")
 #     cv1 = pd.read_csv("cv_lgbm_model_1_49.csv").set_index("SK_ID_CURR")
     cv2 = pd.read_csv("processed/cv_xgb_model_1_169.csv").set_index("SK_ID_CURR")
@@ -33,6 +34,7 @@ def stacking():
         .join(cv15)\
         .join(cv16)
     
+    #load test predictions that were generated using final models script. Those will be used for to generate final predictions using the stacking model.
 #     te1 = pd.read_csv("test_lgbm_model_1_49.csv").set_index("SK_ID_CURR")
     te2 = pd.read_csv("processed/test_xgb_model_1_169.csv").set_index("SK_ID_CURR")
     te3 = pd.read_csv("processed/test_lgbm_model_1_45.csv").set_index("SK_ID_CURR")
@@ -64,6 +66,7 @@ def stacking():
     print(train.shape)
     print(test.shape)
     
+    #Stacking the models using the logistic regression
     from sklearn.linear_model import LogisticRegression
 
     cols = [col for col in train.columns if(col != "TARGET")]
