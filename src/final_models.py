@@ -11,8 +11,6 @@ import gc
 
 def lightgbm(train, test, seed, model_name):
     gc.enable()
-    # cols = feature_importance.head(395)["column_name"].tolist()
-
     print(train.shape)
     
     # create folds for cross validation and vectors for out-of-folds predictions and for submissions
