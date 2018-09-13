@@ -186,14 +186,12 @@ def prepare_train_test():
     del inst_pay
     gc.collect()
     
-    # Prepare train and test dataframes
-    
     installments_payments = installments_payments.sort_values(["SK_ID_CURR", "DAYS_INSTALMENT"], ascending = True)
     previous_application = previous_application.sort_values(["SK_ID_CURR", "DAYS_DECISION"], ascending = True)
     bureau = bureau.sort_values(["SK_ID_CURR", "DAYS_CREDIT"], ascending = True)
     
     print("prepare installments payments")
-    #installments_payments all time
+    # installments_payments. Use all data here. Create some features like Days Before Due & Days Past Due and aggregate data and join them to train & test datasets
     installments_payments["PAYMENT_DIFF"] = installments_payments["AMT_PAYMENT"] - installments_payments["AMT_INSTALMENT"]
     installments_payments["DBD"] = installments_payments["DAYS_INSTALMENT"] - installments_payments["DAYS_ENTRY_PAYMENT"]
     installments_payments["DPD"] = installments_payments["DAYS_ENTRY_PAYMENT"] - installments_payments["DAYS_INSTALMENT"]
@@ -233,7 +231,7 @@ def prepare_train_test():
     application = application.join(installments_payments.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "AMT_PAYMENT" : "min"}).groupby("SK_ID_CURR").agg({"AMT_PAYMENT" : "sum"})
                        , rsuffix = "_min_sum_INST")
     
-    #installments_payments 6 months
+    # installments_payments. Use data of only last 6 months, then aggregate data and join them to train & test datasets
     inst_pay_6 = installments_payments.loc[installments_payments["DAYS_INSTALMENT"] > -182]
     application = application.join(inst_pay_6.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "AMT_PAYMENT" : "min"}).groupby("SK_ID_CURR").agg({"AMT_PAYMENT" : "sum"})
                        , rsuffix = "_min_sum_6_INST")
@@ -259,7 +257,7 @@ def prepare_train_test():
     inst_pay.columns = pd.Index(['INST_PAY_6_' + e[0] + "_" + e[1].upper() for e in inst_pay.columns.tolist()])
     application = application.join(inst_pay)
     
-    #installments_payments 12 months
+    # installments_payments. Use data of only last 12 months, then aggregate data and join them to train & test datasets
     inst_pay_12 = installments_payments.loc[installments_payments["DAYS_INSTALMENT"] > -366]
     application = application.join(inst_pay_12.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "AMT_PAYMENT" : "min"}).groupby("SK_ID_CURR").agg({"AMT_PAYMENT" : "sum"})
                        , rsuffix = "_min_sum_12_INST")
@@ -285,7 +283,7 @@ def prepare_train_test():
     inst_pay.columns = pd.Index(['INST_PAY_12_' + e[0] + "_" + e[1].upper() for e in inst_pay.columns.tolist()])
     application = application.join(inst_pay)
     
-    #POS_CASH_balance all time
+    #POS_CASH_balance. Use all data here, then aggregate data and join them to train & test datasets.
     print("prepare POS CASH balance")
     application = application.join(POS_CASH_balance.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "CNT_INSTALMENT_FUTURE" : "mean"}).groupby("SK_ID_CURR").agg({"CNT_INSTALMENT_FUTURE" : "max"})
                        , rsuffix = "_mean_max_POS")
@@ -296,7 +294,7 @@ def prepare_train_test():
     application = application.join(pos_cash_bal)
     application = application.join(POS_CASH_balance.groupby("SK_ID_CURR").NAME_CONTRACT_STATUS.value_counts().unstack().fillna(0), rsuffix = "_POS")
     
-    #POS_CASH_balance 6 months
+    #POS_CASH_balance. Use data of last 6 months, then aggregate data and join them to train & test datasets.
     POS_CASH_balance_6 = POS_CASH_balance.loc[POS_CASH_balance["MONTHS_BALANCE"] >= -6]
     application = application.join(POS_CASH_balance_6.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "CNT_INSTALMENT_FUTURE" : "mean"}).groupby("SK_ID_CURR").agg({"CNT_INSTALMENT_FUTURE" : "max"})
                        , rsuffix = "_mean_max_6_POS")
@@ -305,7 +303,7 @@ def prepare_train_test():
     application = application.join(pos_cash_bal)
     application = application.join(POS_CASH_balance_6.groupby("SK_ID_CURR").NAME_CONTRACT_STATUS.value_counts().unstack().fillna(0), rsuffix = "_6_POS")
 
-    #POS_CASH_balance 12 months
+    #POS_CASH_balance. Use data of last 12 months, then aggregate data and join them to train & test datasets.
     POS_CASH_balance_12 = POS_CASH_balance.loc[POS_CASH_balance["MONTHS_BALANCE"] >= -12]
     application = application.join(POS_CASH_balance_12.groupby("SK_ID_PREV").agg({"SK_ID_CURR": "min", "CNT_INSTALMENT_FUTURE" : "mean"}).groupby("SK_ID_CURR").agg({"CNT_INSTALMENT_FUTURE" : "max"})
                        , rsuffix = "_mean_max_12_POS")
@@ -314,7 +312,7 @@ def prepare_train_test():
     application = application.join(pos_cash_bal)
     application = application.join(POS_CASH_balance_12.groupby("SK_ID_CURR").NAME_CONTRACT_STATUS.value_counts().unstack().fillna(0), rsuffix = "_12_POS")
     
-    #credit_card_balance all time
+    #credit_card_balance. Use all data here. Add some features like Balance to Amount limit ratio, then aggregate data and join them to train & test datasets. 
     print("prepare credit card balance")
     credit_card_balance["AMT_DRAWINGS"] = credit_card_balance["AMT_DRAWINGS_ATM_CURRENT"] + credit_card_balance["AMT_DRAWINGS_CURRENT"] + credit_card_balance["AMT_DRAWINGS_OTHER_CURRENT"] + credit_card_balance["AMT_DRAWINGS_POS_CURRENT"]
     credit_card_balance["CNT_DRAWINGS"] = credit_card_balance["CNT_DRAWINGS_ATM_CURRENT"] + credit_card_balance["CNT_DRAWINGS_CURRENT"] + credit_card_balance["CNT_DRAWINGS_OTHER_CURRENT"] + credit_card_balance["CNT_DRAWINGS_POS_CURRENT"]
@@ -356,7 +354,7 @@ def prepare_train_test():
     new_columns = [col for col in application.columns.tolist() if col not in train_columns_before]
     application[new_columns] = application[new_columns].fillna(np.inf) 
 
-    #credit_card_balance 6 months
+    #credit_card_balance. Use data of last 6 months, then aggregate data and join them to train & test datasets. 
     credit_card_balance_6 = credit_card_balance.loc[credit_card_balance["MONTHS_BALANCE"] >= -6]
     del credit_card_aggs["MONTHS_BALANCE"]
     cred_card_bal = credit_card_balance_6.groupby("SK_ID_CURR").agg(credit_card_aggs)    
@@ -383,7 +381,7 @@ def prepare_train_test():
     new_columns = [col for col in application.columns.tolist() if col not in train_columns_before]
     application[new_columns] = application[new_columns].fillna(np.inf) 
 
-    #credit_card_balance 12 months
+    #credit_card_balance. Add some features like Balance to Amount limit ratio. Use data of last 12 months, then aggregate data and join them to train & test datasets. 
     credit_card_balance_12 = credit_card_balance.loc[credit_card_balance["MONTHS_BALANCE"] >= -12]
     cred_card_bal = credit_card_balance_12.groupby("SK_ID_CURR").agg(credit_card_aggs)    
     cred_card_bal.columns = pd.Index(['CRE_12_' + e[0] + "_" + e[1].upper() for e in cred_card_bal.columns.tolist()])
@@ -394,7 +392,7 @@ def prepare_train_test():
     application[new_columns] = application[new_columns].fillna(np.inf) 
     new_columns = [col for col in new_columns if "SK_DPD" not in col]
 
-    #bureau_balance all time
+    #bureau_balance. Use all data here, then aggregate data and join them to train & test datasets. 
     print("prepare bureau balance")
     bur_bal = bureau_balance.copy()
     application = application.join(bur_bal.groupby("SK_ID_CURR").STATUS.value_counts().unstack().fillna(0), rsuffix = "_BUR_BAL")
@@ -408,7 +406,7 @@ def prepare_train_test():
     bur_bal = bureau_balance.loc[bureau_balance["MONTHS_BALANCE"] >= -12]
     application = application.join(bur_bal.groupby("SK_ID_CURR").STATUS.value_counts().unstack().fillna(0), rsuffix = "_12_BUR_BAL")
 
-    #previous_application all time
+    #previous_application. Use all data here, then aggregate data and join them to train & test datasets. 
     print("prepare previous application")
     previous_application["DAYS_LAST_DUE_div_DAYS_FIRST_DUE"] = previous_application["DAYS_LAST_DUE"].divide(previous_application["DAYS_FIRST_DUE"].replace(0, np.nan))
     cat_prev_app = previous_application.groupby("SK_ID_CURR").NAME_CONTRACT_STATUS.value_counts().unstack().fillna(0)
@@ -425,7 +423,7 @@ def prepare_train_test():
     prev_app.columns = pd.Index(['PREV_' + e[0] + "_" + e[1].upper() for e in prev_app.columns.tolist()])
     application = application.join(prev_app, rsuffix = "_PREV")
     
-    #previous_application accepted
+    #previous_application. Use data of approved applications only, then aggregate data and join them to train & test datasets. 
     accepted = previous_application.loc[previous_application["NAME_CONTRACT_STATUS"] == "Approved"]
     cat_prev_app = accepted.groupby("SK_ID_CURR").NAME_YIELD_GROUP.value_counts().unstack().fillna(0)
     application = application.join(cat_prev_app, rsuffix = "_APP_PREV")
@@ -433,7 +431,7 @@ def prepare_train_test():
     prev_app.columns = pd.Index(['PREV_APP_' + e[0] + "_" + e[1].upper() for e in prev_app.columns.tolist()])
     application = application.join(prev_app, rsuffix = "_APP_PREV")
     
-    #previous_application refused
+    #previous_application. Use data of refused applications only, then aggregate data and join them to train & test datasets. 
     refused = previous_application.loc[previous_application["NAME_CONTRACT_STATUS"] == "Refused"]
     cat_prev_app = refused.groupby("SK_ID_CURR").NAME_YIELD_GROUP.value_counts().unstack().fillna(0)
     application = application.join(cat_prev_app, rsuffix = "_REF_PREV")
@@ -442,7 +440,7 @@ def prepare_train_test():
     prev_app.columns = pd.Index(['PREV_APP_' + e[0] + "_" + e[1].upper() for e in prev_app.columns.tolist()])
     application = application.join(prev_app, rsuffix = "_REF_PREV")
     
-    #previous_application 6 months
+    #previous_application. Use data of only last 6 months, then aggregate data and join them to train & test datasets. 
     ids_1 = POS_CASH_balance.loc[POS_CASH_balance["MONTHS_BALANCE"] >= -6]["SK_ID_PREV"].unique()
     ids_2 = credit_card_balance.loc[credit_card_balance["MONTHS_BALANCE"] >= -6]["SK_ID_PREV"].unique()
     ids = np.unique(np.append(ids_1, ids_2))
@@ -454,7 +452,7 @@ def prepare_train_test():
     prev_app.columns = pd.Index(['PREV_6_' + e[0] + "_" + e[1].upper() for e in prev_app.columns.tolist()])
     application = application.join(prev_app, rsuffix = "_6_PREV")
     
-    #previous_application 12 months
+    #previous_application. Use data of only last 12 months, then aggregate data and join them to train & test datasets. 
     ids_1 = POS_CASH_balance.loc[POS_CASH_balance["MONTHS_BALANCE"] >= -12]["SK_ID_PREV"].unique()
     ids_2 = credit_card_balance.loc[credit_card_balance["MONTHS_BALANCE"] >= -12]["SK_ID_PREV"].unique()
     ids = np.unique(np.append(ids_1, ids_2))
@@ -466,7 +464,7 @@ def prepare_train_test():
     application = application.join(prev_app, rsuffix = "_12_PREV")
     
     
-    #bureau
+    #bureau. Use all data here, then aggregate data and join them to train & test datasets. 
     print("prepare bureau")
     bureau["AMT_CREDIT_SUM_div_AMT_CREDIT_SUM_DEBT"] = bureau["AMT_CREDIT_SUM"].divide(bureau["AMT_CREDIT_SUM_DEBT"].replace(0, np.nan))
     bureau["AMT_CREDIT_SUM_diff_AMT_CREDIT_SUM_DEBT"] = bureau["AMT_CREDIT_SUM"].subtract(bureau["AMT_CREDIT_SUM_DEBT"])
@@ -503,7 +501,7 @@ def prepare_train_test():
     bur = bureau.groupby("SK_ID_CURR").CREDIT_TYPE.value_counts().unstack().fillna(0)
     application = application.join(bur, rsuffix = "_BUR")
     
-    #bureau 1 year data
+    #bureau. Use data of last 12 months only, then aggregate data and join them to train & test datasets. 
     bureau_12 = bureau.loc[bureau["DAYS_CREDIT"] >= -365]
     bur = bureau_12.groupby("SK_ID_CURR").agg(bur_aggs)   
     bur.columns = pd.Index(['BUR_12_' + e[0] + "_" + e[1].upper() for e in bur.columns.tolist()])
@@ -519,7 +517,7 @@ def prepare_train_test():
     new_columns = [col for col in application.columns.tolist() if col not in train_columns_before]
     application[new_columns] = application[new_columns].fillna(0) 
     
-    #bureau 6 months data
+    #bureau. Use data of last 6 months only, then aggregate data and join them to train & test datasets. 
     bureau_6 = bureau.loc[bureau["DAYS_CREDIT"] >= -183]
     bur = bureau_6.groupby("SK_ID_CURR").agg(bur_aggs)   
     bur.columns = pd.Index(['BUR_6_' + e[0] + "_" + e[1].upper() for e in bur.columns.tolist()])
@@ -535,7 +533,7 @@ def prepare_train_test():
     new_columns = [col for col in application.columns.tolist() if col not in train_columns_before]
     application[new_columns] = application[new_columns].fillna(0) 
     
-    #credit cards
+    #merge credit card data from credit_card_balance and bureau table
     print("prepare credit cards")
     credit_card_balance["STATUS"] = (credit_card_balance["SK_DPD"]/30).astype(int)
     credit_card_balance["STATUS"] = np.where(credit_card_balance["STATUS"] >= 5, 5, credit_card_balance["STATUS"])
@@ -567,7 +565,7 @@ def prepare_train_test():
     credit_cards["CRED_CAR_AMT_TOTAL_RECEIVABLE_SUM_div_CRED_CAR_AMT_CREDIT_SUM"] = credit_cards["CRED_CAR_AMT_TOTAL_RECEIVABLE_SUM"].divide(credit_cards["CRED_CAR_AMT_CREDIT_SUM"].replace(0,np.nan))
     application = application.join(credit_cards)
     
-    #credit cards 6 months
+    #same here, but only data of last 6 months
     bur_bal = bureau_balance.loc[bureau_balance["MONTHS_BALANCE"] >= -6][["SK_ID_BUREAU", "STATUS"]]
     bur_bal["STATUS"] = bur_bal["STATUS"].replace({"C" : 0, "X" : 0, "0" : 0, "1" : 1, "2": 2, "3" : 3, "4": 4, "5" : 5})
     bur_bal = bur_bal.groupby("SK_ID_BUREAU").STATUS.value_counts().unstack().fillna(0)
@@ -597,7 +595,7 @@ def prepare_train_test():
     credit_cards["CRED_CAR_6_AMT_TOTAL_RECEIVABLE_SUM_div_CRED_CAR_AMT_CREDIT_SUM"] = credit_cards["CRED_CAR_6_AMT_TOTAL_RECEIVABLE_SUM"].divide(credit_cards["CRED_CAR_6_AMT_CREDIT_SUM"].replace(0,np.nan))
     application = application.join(credit_cards)
     
-    #credit cards 12 months
+    #same here, but only data of last 12 months
     bur_bal = bureau_balance.loc[bureau_balance["MONTHS_BALANCE"] >= -12][["SK_ID_BUREAU", "STATUS"]]
     bur_bal["STATUS"] = bur_bal["STATUS"].replace({"C" : 0, "X" : 0, "0" : 0, "1" : 1, "2": 2, "3" : 3, "4": 4, "5" : 5})
     bur_bal = bur_bal.groupby("SK_ID_BUREAU").STATUS.value_counts().unstack().fillna(0)
@@ -628,7 +626,7 @@ def prepare_train_test():
 #     credit_cards = credit_cards.drop(columns = credit_cards_columns)
     application = application.join(credit_cards)
     
-    # application
+    # prepare some useful features from application dataframe.
     print("prepare application")
     application["SK_DPD_TOT"] = application["POS_SK_DPD_MAX"] + application["CRE_SK_DPD_MAX"]
     application["SK_DPD_TOT_6"] = application["POS_6_SK_DPD_MAX"] + application["CRE_6_SK_DPD_MAX"]
@@ -715,6 +713,7 @@ def prepare_train_test():
     print('There are %d columns to remove.' % (len(to_drop)))
     application = application.drop(columns = to_drop)
     
+    # add some features from installments_payments table. compute periods between payments. Bad clients tends to take long time to pay their debt correctly. Then aggregate those features and join them to train and test datasets.
     inst_pay = installments_payments.groupby(["SK_ID_CURR", "DAYS_ENTRY_PAYMENT"]).agg({"DAYS_INSTALMENT" : "min", "AMT_INSTALMENT" : "sum", "AMT_PAYMENT" : "sum"}).reset_index()
     inst_pay = inst_pay.sort_values(["SK_ID_CURR", "DAYS_ENTRY_PAYMENT"], ascending = True).reset_index()
     inst_pay["DAYS_INSTALMENT_DIFF"] = inst_pay.groupby("SK_ID_CURR").DAYS_INSTALMENT.diff()
@@ -733,5 +732,6 @@ def prepare_train_test():
     print('Training shape: ', train.shape)
     print('Testing shape: ', test.shape)
     
+    # Save model base 1 (train & test). Next step is feature selection.
     train.to_csv("processed/train_model_base_1.csv")
     test.to_csv("processed/test_model_base_1.csv")
